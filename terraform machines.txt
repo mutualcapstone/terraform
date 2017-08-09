@@ -1,0 +1,800 @@
+REDHAT7.3
+----------------
+provider "azurerm" {
+  subscription_id = "e49d48d6-30e1-48d9-9ac4-36b358feb982"
+  client_id       = "2a9f8b21-0f99-435c-b35a-bf3df870ebb0"
+  client_secret   = "cXnNp5aLIkhCGSVqhTVpobFnm6ZDNKl0f7UaGUxti7Q="
+  tenant_id       = "afe99aaf-e6f8-4141-be8e-2fba506b2e57"
+}
+resource "azurerm_resource_group" "test" {
+    name = "RemoveTerraform"
+    location = "North Central US"
+}
+
+resource "azurerm_virtual_network" "test" {
+    name = "acctvn"
+    address_space = ["10.0.0.0/16"]
+    location = "North Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+}
+
+resource "azurerm_subnet" "test" {
+    name = "acctsub"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_network_name = "${azurerm_virtual_network.test.name}"
+    address_prefix = "10.0.2.0/24"
+}
+
+resource "azurerm_public_ip" "test" {
+    name = "TerraformIP"
+    location = "North Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    public_ip_address_allocation = "static"
+    domain_name_label = "terralinux"
+    tags {
+        environment = "Production"
+    }
+}
+
+resource "azurerm_network_interface" "test" {
+    name = "acctni"
+    location = "North Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+
+    ip_configuration {
+        name = "testconfiguration1"
+        subnet_id = "${azurerm_subnet.test.id}"
+        private_ip_address_allocation = "dynamic"
+        public_ip_address_id = "${azurerm_public_ip.test.id}"
+    }
+}
+
+
+
+resource "azurerm_storage_account" "test" {
+    name = "accsa1971eek"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    location = "North Central US"
+    account_type = "Standard_LRS"
+
+    tags {
+        environment = "staging"
+    }
+}
+
+resource "azurerm_storage_container" "test" {
+    name = "vhds"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    storage_account_name = "${azurerm_storage_account.test.name}"
+    container_access_type = "private"
+}
+
+resource "azurerm_virtual_machine" "test" {
+    name = "TerraformVM01"
+    location = "North Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    network_interface_ids = ["${azurerm_network_interface.test.id}"]
+    vm_size = "Standard_A0"
+
+    storage_image_reference {
+    publisher = "RedHat"
+    offer = "RHEL"
+    sku = "7.3"
+    version = "latest"
+    }
+
+    storage_os_disk {
+        name = "myosdisk1"
+        vhd_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/myosdisk1.vhd"
+        caching = "ReadWrite"
+        create_option = "FromImage"
+    }
+
+    os_profile {
+    computer_name = "TerraformTest"
+    admin_username = "testadmin"
+    admin_password = "Password1234"
+    }
+
+    os_profile_linux_config {
+    disable_password_authentication = false
+    }
+    
+    provisioner "remote-exec" {
+    connection {
+        type = "ssh"
+        user = "testadmin"
+        password = "password1234"
+        host = "${azurerm_public_ip.test.ip_address}"
+    }
+      inline = [
+      "sudo sh -c 'curl -L https://omnitruck.chef.io/install.sh | bash'"
+      ]
+    }
+}
+
+Win2012 datacenter
+------------------------------------
+provider "azurerm" {
+  subscription_id = "e49d48d6-30e1-48d9-9ac4-36b358feb982"
+  client_id       = "2a9f8b21-0f99-435c-b35a-bf3df870ebb0"
+  client_secret   = "cXnNp5aLIkhCGSVqhTVpobFnm6ZDNKl0f7UaGUxti7Q="
+  tenant_id       = "afe99aaf-e6f8-4141-be8e-2fba506b2e57"
+}
+resource "azurerm_resource_group" "test" {
+    name = "RemoveTerraform"
+    location = "South Central US"
+}
+
+resource "azurerm_virtual_network" "test" {
+    name = "acctvn"
+    address_space = ["10.0.0.0/16"]
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+}
+
+resource "azurerm_subnet" "test" {
+    name = "acctsub"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_network_name = "${azurerm_virtual_network.test.name}"
+    address_prefix = "10.0.2.0/24"
+}
+
+resource "azurerm_public_ip" "test" {
+    name = "TerraformIPP"
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    public_ip_address_allocation = "static"
+    domain_name_label = "berralinux"
+    tags {
+        environment = "Production"
+    }
+}
+
+resource "azurerm_network_interface" "test" {
+    name = "bcctni"
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+
+    ip_configuration {
+        name = "testconfiguration1"
+        subnet_id = "${azurerm_subnet.test.id}"
+        private_ip_address_allocation = "dynamic"
+        public_ip_address_id = "${azurerm_public_ip.test.id}"
+    }
+}
+resource "azurerm_storage_account" "test" {
+    name = "accsa1971eeu"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    location = "South Central US"
+    account_type = "Standard_LRS"
+
+    tags {
+        environment = "staging"
+    }
+}
+
+resource "azurerm_storage_container" "test" {
+    name = "vhds"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    storage_account_name = "${azurerm_storage_account.test.name}"
+    container_access_type = "private"
+}
+
+resource "azurerm_virtual_machine" "test" {
+    name = "TerraformVM01"
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    network_interface_ids = ["${azurerm_network_interface.test.id}"]
+    vm_size = "Standard_A0"
+
+
+    storage_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer = "WindowsServer"
+    sku = "2012-Datacenter"
+    version = "latest"
+    }
+
+        storage_os_disk {
+        name = "myosdisk1"
+        vhd_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/myosdisk1.vhd"
+        caching = "ReadWrite"
+        create_option = "FromImage"
+    }
+
+    os_profile {
+    computer_name = "TerraformTest"
+    admin_username = "testadmin"
+    admin_password = "Password1234"
+    }
+}
+
+windows r2 datacenter
+-----------------------------------------------
+provider "azurerm" {
+  subscription_id = "e49d48d6-30e1-48d9-9ac4-36b358feb982"
+  client_id       = "2a9f8b21-0f99-435c-b35a-bf3df870ebb0"
+  client_secret   = "cXnNp5aLIkhCGSVqhTVpobFnm6ZDNKl0f7UaGUxti7Q="
+  tenant_id       = "afe99aaf-e6f8-4141-be8e-2fba506b2e57"
+}
+resource "azurerm_resource_group" "test" {
+    name = "RemoveTerraform"
+    location = "South Central US"
+}
+
+resource "azurerm_virtual_network" "test" {
+    name = "acctvn"
+    address_space = ["10.0.0.0/16"]
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+}
+
+resource "azurerm_subnet" "test" {
+    name = "acctsub"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_network_name = "${azurerm_virtual_network.test.name}"
+    address_prefix = "10.0.2.0/24"
+}
+
+resource "azurerm_public_ip" "test" {
+    name = "TerraformIPP"
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    public_ip_address_allocation = "static"
+    domain_name_label = "berralinux"
+    tags {
+        environment = "Production"
+    }
+}
+
+resource "azurerm_network_interface" "test" {
+    name = "bcctni"
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+
+    ip_configuration {
+        name = "testconfiguration1"
+        subnet_id = "${azurerm_subnet.test.id}"
+        private_ip_address_allocation = "dynamic"
+        public_ip_address_id = "${azurerm_public_ip.test.id}"
+    }
+}
+resource "azurerm_storage_account" "test" {
+    name = "accsa1971eeu"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    location = "South Central US"
+    account_type = "Standard_LRS"
+
+    tags {
+        environment = "staging"
+    }
+}
+
+resource "azurerm_storage_container" "test" {
+    name = "vhds"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    storage_account_name = "${azurerm_storage_account.test.name}"
+    container_access_type = "private"
+}
+
+resource "azurerm_virtual_machine" "test" {
+    name = "TerraformVM01"
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    network_interface_ids = ["${azurerm_network_interface.test.id}"]
+    vm_size = "Standard_A0"
+
+
+    storage_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer = "WindowsServer"
+    sku = "2012-R2-Datacenter"
+    version = "latest"
+    }
+
+        storage_os_disk {
+        name = "myosdisk1"
+        vhd_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/myosdisk1.vhd"
+        caching = "ReadWrite"
+        create_option = "FromImage"
+    }
+
+    os_profile {
+    computer_name = "TerraformTest"
+    admin_username = "testadmin"
+    admin_password = "Password1234"
+    }
+}
+-----------------------------------------------------------------------------
+with parameter file example
+
+variable "subscription_id"{}
+variable "client_id"{}
+variable "client_secret"{}
+variable "tenant_id"{}
+provider "azurerm" {
+  subscription_id = "${var.subscription_id}"
+  client_id       = "${var.client_id}"
+  client_secret   = "${var.client_secret}"
+  tenant_id       = "${var.tenant_id}"
+}
+resource "azurerm_resource_group" "test" {
+    name = "RemoveTerraform"
+    location = "South Central US"
+}
+
+resource "azurerm_virtual_network" "test" {
+    name = "acctvn"
+    address_space = ["10.0.0.0/16"]
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+}
+
+resource "azurerm_subnet" "test" {
+    name = "acctsub"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_network_name = "${azurerm_virtual_network.test.name}"
+    address_prefix = "10.0.2.0/24"
+}
+
+resource "azurerm_public_ip" "test" {
+    name = "TerraformIPP"
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    public_ip_address_allocation = "static"
+    domain_name_label = "berralinux"
+    tags {
+        environment = "Production"
+    }
+}
+
+resource "azurerm_network_interface" "test" {
+    name = "bcctni"
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+
+    ip_configuration {
+        name = "testconfiguration1"
+        subnet_id = "${azurerm_subnet.test.id}"
+        private_ip_address_allocation = "dynamic"
+        public_ip_address_id = "${azurerm_public_ip.test.id}"
+    }
+}
+resource "azurerm_storage_account" "test" {
+    name = "accsa1971eeu"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    location = "South Central US"
+    account_type = "Standard_LRS"
+
+    tags {
+        environment = "staging"
+    }
+}
+
+resource "azurerm_storage_container" "test" {
+    name = "vhds"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    storage_account_name = "${azurerm_storage_account.test.name}"
+    container_access_type = "private"
+}
+
+resource "azurerm_virtual_machine" "test" {
+    name = "TerraformVM01"
+    location = "South Central US"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    network_interface_ids = ["${azurerm_network_interface.test.id}"]
+    vm_size = "Standard_A0"
+
+
+    storage_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer = "WindowsServer"
+    sku = "2012-R2-Datacenter"
+    version = "latest"
+    }
+
+        storage_os_disk {
+        name = "myosdisk1"
+        vhd_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/myosdisk1.vhd"
+        caching = "ReadWrite"
+        create_option = "FromImage"
+    }
+
+    os_profile {
+    computer_name = "TerraformTest"
+    admin_username = "testadmin"
+    admin_password = "Password1234"
+    }
+}
+
+xxxxx.tfvars
+-------------
+subscription_id = "e49d48d6-30e1-48d9-9ac4-36b358feb982"
+client_id = "2a9f8b21-0f99-435c-b35a-bf3df870ebb0"
+client_secret = "cXnNp5aLIkhCGSVqhTVpobFnm6ZDNKl0f7UaGUxti7Q="
+tenant_id = "afe99aaf-e6f8-4141-be8e-2fba506b2e57"
+-----------------------------------------------------------------------------------------------------------------------
+
+windows terraform configuration file
+--------------------------
+
+variable "subscription_id"{}
+variable "client_id"{}
+variable "client_secret"{}
+variable "tenant_id"{}
+variable "location"{}
+variable "virtual_network_name"{}
+variable "virtual_network_address_space"{type = "list"} 
+variable "virtual_network_location"{}
+variable "resource_group_name"{}
+variable "subnet_name"{}
+variable "subnet_address_prefix"{}
+variable "public_ip_name"{}
+variable "network_interface_name"{}
+variable "ip_configuration_name"{}
+variable "storage_account_name"{}
+variable "storage_container_name"{}
+variable "virtual_machine_name"{}
+variable"virtual_machine_location"{}
+variable "storage_os_disk_name"{}
+variable "public_ip_public_ip_address_allocation"{}
+variable "public_ip_domain_name_label"{}
+variable "network_interface_location"{}
+variable "storage_account_location"{}
+variable "storage_container_container_access_type"{}
+variable "virtual_machine_vm_size"{}
+variable "image_reference_publisher"{}
+variable "image_reference_offer"{}
+variable "image_reference_sku"{}
+variable "image_reference_version"{}
+variable "os_profile_computer_name"{}
+variable "os_profile_admin_username"{}
+variable "os_profile_admin_password"{}
+variable "storage_account_account_type"{}
+
+provider "azurerm" {
+  subscription_id = "${var.subscription_id}"
+  client_id       = "${var.client_id}"
+  client_secret   = "${var.client_secret}"
+  tenant_id       = "${var.tenant_id}"
+}
+resource "azurerm_resource_group" "test" {
+    name = "${var.resource_group_name}"
+    location = "${var.location}"
+}
+
+resource "azurerm_virtual_network" "test" {
+    name = "${var.virtual_network_name}"
+    address_space = "${var.virtual_network_address_space}"
+    location = "${var.virtual_network_location}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+}
+
+resource "azurerm_subnet" "test" {
+    name = "${var.subnet_name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_network_name = "${azurerm_virtual_network.test.name}"
+    address_prefix = "${var.subnet_address_prefix}"
+}
+
+resource "azurerm_public_ip" "test" {
+    name = "${var.public_ip_name}"
+    location = "${var.location}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    public_ip_address_allocation = "${var.public_ip_public_ip_address_allocation}"
+    domain_name_label = "${var.public_ip_domain_name_label}"
+    tags {
+        environment = "production"
+    }
+}
+
+resource "azurerm_network_interface" "test" {
+    name = "${var.network_interface_name}"
+    location = "${var.network_interface_location}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+
+    ip_configuration {
+        name = "${var.ip_configuration_name}"
+        subnet_id = "${azurerm_subnet.test.id}"
+        private_ip_address_allocation = "dynamic"
+        public_ip_address_id = "${azurerm_public_ip.test.id}"
+    }
+}
+resource "azurerm_storage_account" "test" {
+    name = "${var.storage_account_name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    location = "${var.storage_account_location}"
+    account_type = "${var.storage_account_account_type}"
+
+    tags {
+        environment = "staging"
+    }
+}
+
+resource "azurerm_storage_container" "test" {
+    name = "${var.storage_container_name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    storage_account_name = "${azurerm_storage_account.test.name}"
+    container_access_type = "${var.storage_container_container_access_type}"
+}
+
+resource "azurerm_virtual_machine" "test" {
+    name = "${var.virtual_machine_name}"
+    location = "${var.virtual_machine_location}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    network_interface_ids = ["${azurerm_network_interface.test.id}"]
+    vm_size = "${var.virtual_machine_vm_size}"
+
+
+    storage_image_reference {
+    publisher = "${var.image_reference_publisher}"
+    offer = "${var.image_reference_offer}"
+    sku = "${var.image_reference_sku}"
+    version = "${var.image_reference_version}"
+    }
+
+        storage_os_disk {
+        name = "${var.storage_os_disk_name}"
+        vhd_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/${var.storage_os_disk_name}.vhd"
+        caching = "ReadWrite"
+        create_option = "FromImage"
+    }
+
+    os_profile {
+    computer_name = "${var.os_profile_computer_name}"
+    admin_username = "${var.os_profile_admin_username}"
+    admin_password = "${var.os_profile_admin_password}"
+    }
+}
+
+
+param file for win2012r2db(file.tfvars)
+-------------------------------------
+subscription_id = "e49d48d6-30e1-48d9-9ac4-36b358feb982"
+client_id = "2a9f8b21-0f99-435c-b35a-bf3df870ebb0"
+client_secret = "cXnNp5aLIkhCGSVqhTVpobFnm6ZDNKl0f7UaGUxti7Q="
+tenant_id = "afe99aaf-e6f8-4141-be8e-2fba506b2e57"
+location ="South Central US"
+virtual_network_location = "South Central US"
+resource_group_name = "RemoveTerraform1144"
+virtual_network_name = "acctvn66"
+virtual_network_address_space = ["10.0.0.0/16"]
+subnet_name = "acctsub66"
+subnet_address_prefix = "10.0.2.0/24"
+public_ip_name = "TerraformIPP66"
+network_interface_name = "bcctni66"
+ip_configuration_name = "testconfiguration66"
+storage_account_name = "accsa197166"
+storage_container_name = "rdb"
+virtual_machine_name = "TerraformVM066"
+storage_os_disk_name = "myosdisk66"
+public_ip_public_ip_address_allocation = "static"
+public_ip_domain_name_label = "berralinux"
+network_interface_location = "South Central US"
+storage_account_location = "South Central US"
+storage_container_container_access_type = "private"
+virtual_machine_location = "South Central US"
+virtual_machine_vm_size = "Standard_A0"
+image_reference_publisher = "MicrosoftWindowsServer"
+image_reference_offer = "WindowsServer"
+image_reference_sku = "2012-R2-Datacenter"
+image_reference_version = "latest"
+os_profile_computer_name = "TerraformTest"
+os_profile_admin_username = "testadmin"
+os_profile_admin_password = "Password1234"
+storage_account_account_type = "Standard_LRS"
+
+
+---------------------------------------------------------------------------------
+terraform linux config file
+---------------------------------
+
+variable "subscription_id"{}
+variable "client_id"{}
+variable "client_secret"{}
+variable "tenant_id"{}
+variable "location"{}
+variable "virtual_network_name"{}
+variable "virtual_network_address_space"{type = "list"} 
+variable "virtual_network_location"{}
+variable "resource_group_name"{}
+variable "subnet_name"{}
+variable "subnet_address_prefix"{}
+variable "public_ip_name"{}
+variable "network_interface_name"{}
+variable "ip_configuration_name"{}
+variable "storage_account_name"{}
+variable "storage_container_name"{}
+variable "virtual_machine_name"{}
+variable"virtual_machine_location"{}
+variable "storage_os_disk_name"{}
+variable "public_ip_public_ip_address_allocation"{}
+variable "public_ip_domain_name_label"{}
+variable "network_interface_location"{}
+variable "storage_account_location"{}
+variable "storage_container_container_access_type"{}
+variable "virtual_machine_vm_size"{}
+variable "image_reference_publisher"{}
+variable "image_reference_offer"{}
+variable "image_reference_sku"{}
+variable "image_reference_version"{}
+variable "os_profile_computer_name"{}
+variable "os_profile_admin_username"{}
+variable "os_profile_admin_password"{}
+variable "storage_account_account_type"{}
+variable "remote_exec_type"{}
+variable "remote_exec_user" {}
+variable "remote_exec_password"{}
+
+provider "azurerm" {
+  subscription_id = "${var.subscription_id}"
+  client_id       = "${var.client_id}"
+  client_secret   = "${var.client_secret}"
+  tenant_id       = "${var.tenant_id}"
+}
+resource "azurerm_resource_group" "test" {
+    name = "${var.resource_group_name}"
+    location = "${var.location}"
+}
+
+resource "azurerm_virtual_network" "test" {
+    name = "${var.virtual_network_name}"
+    address_space = "${var.virtual_network_address_space}"
+    location = "${var.virtual_network_location}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+}
+
+resource "azurerm_subnet" "test" {
+    name = "${var.subnet_name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_network_name = "${azurerm_virtual_network.test.name}"
+    address_prefix = "${var.subnet_address_prefix}"
+}
+
+resource "azurerm_public_ip" "test" {
+    name = "${var.public_ip_name}"
+    location = "${var.location}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    public_ip_address_allocation = "${var.public_ip_public_ip_address_allocation}"
+    domain_name_label = "${var.public_ip_domain_name_label}"
+    tags {
+        environment = "production"
+    }
+}
+
+resource "azurerm_network_interface" "test" {
+    name = "${var.network_interface_name}"
+    location = "${var.network_interface_location}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+
+    ip_configuration {
+        name = "${var.ip_configuration_name}"
+        subnet_id = "${azurerm_subnet.test.id}"
+        private_ip_address_allocation = "dynamic"
+        public_ip_address_id = "${azurerm_public_ip.test.id}"
+    }
+}
+resource "azurerm_storage_account" "test" {
+    name = "${var.storage_account_name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    location = "${var.storage_account_location}"
+    account_type = "${var.storage_account_account_type}"
+
+    tags {
+        environment = "staging"
+    }
+}
+
+resource "azurerm_storage_container" "test" {
+    name = "${var.storage_container_name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    storage_account_name = "${azurerm_storage_account.test.name}"
+    container_access_type = "${var.storage_container_container_access_type}"
+}
+
+resource "azurerm_virtual_machine" "test" {
+    name = "${var.virtual_machine_name}"
+    location = "${var.virtual_machine_location}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    network_interface_ids = ["${azurerm_network_interface.test.id}"]
+    vm_size = "${var.virtual_machine_vm_size}"
+
+
+    storage_image_reference {
+    publisher = "${var.image_reference_publisher}"
+    offer = "${var.image_reference_offer}"
+    sku = "${var.image_reference_sku}"
+    version = "${var.image_reference_version}"
+    }
+
+        storage_os_disk {
+        name = "${var.storage_os_disk_name}"
+        vhd_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/${var.storage_os_disk_name}.vhd"
+        caching = "ReadWrite"
+        create_option = "FromImage"
+    }
+
+    os_profile {
+    computer_name = "${var.os_profile_computer_name}"
+    admin_username = "${var.os_profile_admin_username}"
+    admin_password = "${var.os_profile_admin_password}"
+    }
+
+    os_profile_linux_config {
+    disable_password_authentication = false
+    }
+    
+    provisioner "remote-exec" {
+    connection {
+        type = "${var.remote_exec_type}"
+        user = "${var.remote_exec_user}"
+        password = "${var.remote_exec_password}"
+        host = "${azurerm_public_ip.test.ip_address}"
+    }
+      inline = [
+      "sudo sh -c 'curl -L https://omnitruck.chef.io/install.sh | bash'"
+      ]
+    }
+}
+
+
+redhat7.3 parameters
+----------------------------------------
+subscription_id = "e49d48d6-30e1-48d9-9ac4-36b358feb982"
+client_id = "2a9f8b21-0f99-435c-b35a-bf3df870ebb0"
+client_secret = "cXnNp5aLIkhCGSVqhTVpobFnm6ZDNKl0f7UaGUxti7Q="
+tenant_id = "afe99aaf-e6f8-4141-be8e-2fba506b2e57"
+location ="North Central US"
+virtual_network_location = "North Central US"
+resource_group_name = "RemoveTerraform1144"
+virtual_network_name = "acctvn66"
+virtual_network_address_space = ["10.0.0.0/16"]
+subnet_name = "acctsub66"
+subnet_address_prefix = "10.0.2.0/24"
+public_ip_name = "TerraformIPP66"
+network_interface_name = "bcctni66"
+ip_configuration_name = "testconfiguration66"
+storage_account_name = "accsa197166"
+storage_container_name = "rdb"
+virtual_machine_name = "TerraformVM066"
+storage_os_disk_name = "myosdisk66"
+public_ip_public_ip_address_allocation = "static"
+public_ip_domain_name_label = "berralinux"
+network_interface_location = "North Central US"
+storage_account_location = "North Central US"
+storage_container_container_access_type = "private"
+virtual_machine_location = "North Central US"
+virtual_machine_vm_size = "Standard_A0"
+image_reference_publisher = "RedHat"
+image_reference_offer = "RHEL"
+image_reference_sku = "7.3"
+image_reference_version = "latest"
+os_profile_computer_name = "TerraformTest"
+os_profile_admin_username = "testadmin"
+os_profile_admin_password = "Password1234"
+storage_account_account_type = "Standard_LRS"
+remote_exec_type = "ssh"
+remote_exec_user = "testadmin"
+remote_exec_password= "Password1234"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
